@@ -2,6 +2,9 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import Signup from './pages/Signup';
 import Login from './pages/Login'; 
 import Dashboard from './pages/Dashboard';
+import Savings from './pages/Savings';
+import Loans from './pages/Loans';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const router = createBrowserRouter([
@@ -18,6 +21,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Dashboard />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/savings",
+    element: (
+      <ProtectedRoute>
+        <Savings />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/loans",
+    element: (
+      <ProtectedRoute>
+        <Loans />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <ProtectedRoute>
+        <Settings />
       </ProtectedRoute>
     ),
   },
