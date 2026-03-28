@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // 🔥 Added Link for Quick Access
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout'; 
-import { db, auth } from '../firebase/config'; // 🔥 Added auth
+import { db, auth } from '../firebase/config'; 
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { verifyAdminTransaction, rejectAdminTransaction } from '../firebase/transactionService';
 import { approveAdminLoan, rejectAdminLoan } from '../firebase/loanService';
 import { 
   CheckCircle, XCircle, Loader2, 
   Wallet, HandCoins, Users, ArrowDownLeft, ShieldAlert, ArrowLeft 
-} from 'lucide-react'; // 🔥 Added ShieldAlert and ArrowLeft
+} from 'lucide-react';
 
 const AdminDashboard = () => {
-  const currentUser = auth.currentUser; // 🔥 Identify the currently logged-in Admin
+  const currentUser = auth.currentUser; 
   const [activeTab, setActiveTab] = useState<'deposits' | 'loans' | 'members'>('deposits');
   
   // Real-time Data States
@@ -84,7 +84,7 @@ const AdminDashboard = () => {
     <Layout title="Cooperative Command Center">
       <div className="space-y-8">
         
-        {/* 🔥 Header with Quick Access Button */}
+        {/* Header with Quick Access Button */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">System Overview</h1>
@@ -153,36 +153,53 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {deposits.map((txn) => (
-                  <li key={txn.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
-                    <div>
-                      <p className="font-black text-slate-900 text-sm uppercase tracking-wide">MoMo Sender: {txn.momoSenderName || 'Unknown'}</p>
-                      <p className="text-xs font-medium text-slate-500 mt-1">Submitted: {txn.createdAt?.toDate().toLocaleString()}</p>
-                      <div className="flex items-center mt-3">
-                        <ArrowDownLeft className="w-4 h-4 text-emerald-500 mr-2" />
-                        <span className="font-black text-emerald-600 text-xl tabular-nums">{txn.amount?.toLocaleString()} RWF</span>
-                      </div>
-                    </div>
-                    
-                    {/* 🔥 Peer Review Check for Deposits */}
-                    <div className="flex space-x-3 w-full sm:w-auto mt-4 sm:mt-0">
-                      {txn.memberId === currentUser?.uid ? (
-                        <div className="px-5 py-3 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center">
-                          <ShieldAlert className="w-4 h-4 mr-2" /> Requires Peer Review
+                {deposits.map((txn) => {
+                  // 🔥 Find the real member profile linked to this transaction
+                  const member = members.find(m => m.id === txn.memberId);
+
+                  return (
+                    <li key={txn.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                      <div>
+                        {/* 🔥 Display System Identity */}
+                        <div className="flex items-center space-x-2">
+                          <p className="font-bold text-slate-900 text-sm">{member?.fullName || 'Unknown Member'}</p>
+                          <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase">System Profile</span>
                         </div>
-                      ) : (
-                        <>
-                          <button onClick={() => handleReject(txn.id, 'deposit')} disabled={processingId === txn.id} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all disabled:opacity-50" title="Reject Deposit">
-                            <XCircle className="w-5 h-5" />
-                          </button>
-                          <button onClick={() => handleVerifyDeposit(txn.id, txn.memberId, txn.amount)} disabled={processingId === txn.id} className="px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-200 disabled:opacity-50 flex items-center min-w-40 justify-center">
-                            {processingId === txn.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-2" /> Verify Deposit</>}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">{member?.email || 'No email registered'}</p>
+                        
+                        {/* 🔥 Display MoMo Sender Name for Cross-Verification */}
+                        <div className="mt-3 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200 inline-block">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">MoMo Account Used</span>
+                          <span className="text-xs font-bold text-slate-800 uppercase">{txn.momoSenderName || 'NOT PROVIDED'}</span>
+                        </div>
+
+                        <div className="flex items-center mt-3">
+                          <ArrowDownLeft className="w-4 h-4 text-emerald-500 mr-2" />
+                          <span className="font-black text-emerald-600 text-xl tabular-nums">{txn.amount?.toLocaleString()} RWF</span>
+                          <span className="text-[10px] font-medium text-slate-400 ml-3">{txn.createdAt?.toDate().toLocaleString()}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Peer Review Check for Deposits */}
+                      <div className="flex space-x-3 w-full sm:w-auto mt-4 sm:mt-0">
+                        {txn.memberId === currentUser?.uid ? (
+                          <div className="px-5 py-3 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center">
+                            <ShieldAlert className="w-4 h-4 mr-2" /> Requires Peer Review
+                          </div>
+                        ) : (
+                          <>
+                            <button onClick={() => handleReject(txn.id, 'deposit')} disabled={processingId === txn.id} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all disabled:opacity-50" title="Reject Deposit">
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => handleVerifyDeposit(txn.id, txn.memberId, txn.amount)} disabled={processingId === txn.id} className="px-6 py-3 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-indigo-200 disabled:opacity-50 flex items-center min-w-40 justify-center">
+                              {processingId === txn.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-2" /> Verify Deposit</>}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )
           )}
@@ -197,41 +214,49 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <ul className="divide-y divide-slate-100">
-                {loans.map((loan) => (
-                  <li key={loan.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50 transition-colors">
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-900 text-xs uppercase tracking-wider">Member Reference: <span className="text-slate-500 font-mono text-xs normal-case">{loan.memberId}</span></p>
-                      <div className="mt-3 bg-slate-100 p-4 rounded-xl border border-slate-200 relative">
-                        <span className="absolute -top-3 left-4 bg-slate-200 px-2 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-widest">Stated Purpose</span>
-                        <p className="text-sm font-medium text-slate-700 leading-relaxed">
-                          "{loan.reason}"
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-left lg:text-right shrink-0">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Requested Principal</p>
-                      <span className="font-black text-rose-600 text-2xl tabular-nums">{loan.amount?.toLocaleString()} RWF</span>
-                    </div>
+                {loans.map((loan) => {
+                  // 🔥 Find the real member profile linked to this loan request
+                  const member = members.find(m => m.id === loan.memberId);
 
-                    {/* 🔥 Peer Review Check for Loans */}
-                    <div className="flex space-x-3 w-full lg:w-auto shrink-0 mt-4 lg:mt-0">
-                      {loan.memberId === currentUser?.uid ? (
-                        <div className="px-5 py-3 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center">
-                          <ShieldAlert className="w-4 h-4 mr-2" /> Requires Peer Review
+                  return (
+                    <li key={loan.id} className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 hover:bg-slate-50 transition-colors">
+                      <div className="flex-1">
+                        {/* 🔥 Display System Identity instead of a raw ID */}
+                        <p className="font-bold text-slate-900 text-sm">{member?.fullName || 'Unknown Member'}</p>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">{member?.email || 'No email registered'}</p>
+
+                        <div className="mt-3 bg-slate-100 p-4 rounded-xl border border-slate-200 relative">
+                          <span className="absolute -top-3 left-4 bg-slate-200 px-2 py-0.5 rounded text-[10px] font-black text-slate-500 uppercase tracking-widest">Stated Purpose</span>
+                          <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                            "{loan.reason}"
+                          </p>
                         </div>
-                      ) : (
-                        <>
-                          <button onClick={() => handleReject(loan.id, 'loan')} disabled={processingId === loan.id} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all disabled:opacity-50" title="Reject Loan">
-                            <XCircle className="w-5 h-5" />
-                          </button>
-                          <button onClick={() => handleApproveLoan(loan.id, loan.memberId, loan.amount)} disabled={processingId === loan.id} className="px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-emerald-200 disabled:opacity-50 flex items-center min-w-40 justify-center">
-                            {processingId === loan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-2" /> Approve Loan</>}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                      </div>
+                      <div className="text-left lg:text-right shrink-0">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Requested Principal</p>
+                        <span className="font-black text-rose-600 text-2xl tabular-nums">{loan.amount?.toLocaleString()} RWF</span>
+                      </div>
+
+                      {/* Peer Review Check for Loans */}
+                      <div className="flex space-x-3 w-full lg:w-auto shrink-0 mt-4 lg:mt-0">
+                        {loan.memberId === currentUser?.uid ? (
+                          <div className="px-5 py-3 bg-slate-100 rounded-xl border border-slate-200 text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center">
+                            <ShieldAlert className="w-4 h-4 mr-2" /> Requires Peer Review
+                          </div>
+                        ) : (
+                          <>
+                            <button onClick={() => handleReject(loan.id, 'loan')} disabled={processingId === loan.id} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl border border-rose-200 transition-all disabled:opacity-50" title="Reject Loan">
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                            <button onClick={() => handleApproveLoan(loan.id, loan.memberId, loan.amount)} disabled={processingId === loan.id} className="px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-md shadow-emerald-200 disabled:opacity-50 flex items-center min-w-40 justify-center">
+                              {processingId === loan.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4 mr-2" /> Approve Loan</>}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  )
+                })}
               </ul>
             )
           )}
@@ -239,7 +264,7 @@ const AdminDashboard = () => {
           {/* 3. MEMBERS TAB */}
           {activeTab === 'members' && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-40">
+              <table className="w-full text-left border-collapse min-w-150">
                 <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-4">Identity & Contact</th>

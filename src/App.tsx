@@ -5,8 +5,11 @@ import Dashboard from './pages/Dashboard';
 import Savings from './pages/Savings';
 import Loans from './pages/Loans';
 import Settings from './pages/Settings';
-import AdminDashboard from './pages/AdminDashboard'; // 🔥 1. Imported the Admin Panel
+import AdminDashboard from './pages/AdminDashboard'; 
 import ProtectedRoute from './components/ProtectedRoute';
+
+// 🔥 1. Import the Admin Vault Wrapper
+import AdminRoute from './components/AdminRoute';
 
 const router = createBrowserRouter([
   {
@@ -49,15 +52,17 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  // 🔥 2. Added the Admin Route
+  
+  // 🔥 2. Swap ProtectedRoute for AdminRoute here!
   {
     path: "/admin",
     element: (
-      <ProtectedRoute>
+      <AdminRoute>
         <AdminDashboard />
-      </ProtectedRoute>
+      </AdminRoute>
     ),
   },
+  
   {
     path: "/",
     element: <Navigate to="/dashboard" replace />,
