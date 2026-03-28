@@ -5,9 +5,10 @@ import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestor
 export interface Transaction {
   id: string;
   amount: number;
-  type: 'saving' | 'loan' | 'repayment' | 'penalty';
+  type: 'deposit' | 'loan' | 'repayment' | 'penalty'; // Fixed to match 'deposit' instead of 'saving'
   createdAt: any;
   status: string;
+  momoSenderName?: string;
 }
 
 export const useTransactions = (memberId: string) => {
@@ -17,22 +18,27 @@ export const useTransactions = (memberId: string) => {
   useEffect(() => {
     if (!memberId) return;
 
-    // Query: Get transactions for this member, newest first
     const q = query(
       collection(db, "transactions"),
       where("memberId", "==", memberId),
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Transaction[];
-      
-      setTransactions(data);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Transaction[];
+        
+        setTransactions(data);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching transactions:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [memberId]);

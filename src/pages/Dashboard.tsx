@@ -14,7 +14,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Real-time listener: Ordinary approach for immediate data accuracy
     const unsub = onSnapshot(doc(db, "members", user.uid), (snapshot) => {
       if (snapshot.exists()) {
         setUserProfile(snapshot.data());
@@ -28,13 +27,16 @@ const Dashboard = () => {
     return () => unsub();
   }, [user]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-[#f4f7f6]">
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">
-        Establishing Secure Connection...
-      </p>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
+        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          Securing Connection...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Layout 
@@ -42,49 +44,33 @@ const Dashboard = () => {
       userName={userProfile?.fullName || "Authenticated Member"} 
       userImage={userProfile?.photoURL}
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         
-        {/* Section 1: Financial Cards (Stack on Mobile, Grid on Desktop) */}
+        {/* Section 1: Financial Cards */}
         <SummaryCards 
           savings={userProfile?.totalSavings || 0}
           loans={userProfile?.activeLoans || 0}
-          trustScore={userProfile?.trustScore || 100}
         />
 
-        {/* Section 2: Desktop Layout vs Mobile Layout Handling */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Section 2: Ledger & Deposit Action */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           
-          {/* Recent Ledger Entries: Taking more space for readability (Ordinary Table UI) */}
-          <div className="lg:col-span-8 order-1">
-            <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <h3 className="text-[11px] font-black text-gray-800 uppercase tracking-widest">
-                  Financial Ledger (Recent)
+          {/* Main Column: Ledger (Takes 2/3 space on large screens) */}
+          <div className="xl:col-span-2 order-2 xl:order-1">
+            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+              <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+                <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Recent Ledger Entries
                 </h3>
               </div>
-              {/* Force horizontal scroll on small mobile screens to prevent data squishing */}
-              <div className="overflow-x-auto">
-                <TransactionList memberId={user?.uid || ''} />
-              </div>
+              <TransactionList memberId={user?.uid || ''} />
             </div>
           </div>
 
-          {/* New Contribution: Secondary focus, easy access on mobile */}
-          <div className="lg:col-span-4 order-2">
-            <div className="bg-white border border-gray-200 p-6 shadow-sm">
-              <h3 className="text-[11px] font-black text-gray-800 uppercase tracking-widest mb-6 border-b border-gray-100 pb-2">
-                Deposit Funds
-              </h3>
-              <DepositForm memberId={user?.uid || ''} />
-            </div>
-            
-            {/* Ordinary Info Card for System Policy */}
-            <div className="mt-6 bg-[#1a1d21] p-5 text-white">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Contribution Rule</p>
-              <p className="text-xs leading-relaxed text-gray-300">
-                All deposits must be verified by a group administrator. Please provide your MoMo transaction ID.
-              </p>
-            </div>
+          {/* Side Column: Deposit Form (Takes 1/3 space) */}
+          <div className="xl:col-span-1 order-1 xl:order-2 space-y-6">
+            {/* The DepositForm component already handles its own white card UI */}
+            <DepositForm memberId={user?.uid || ''} />
           </div>
 
         </div>

@@ -1,51 +1,60 @@
 import { db } from "./config";
 import { 
-  collection, 
-  addDoc, 
-  serverTimestamp, 
   doc, 
-  updateDoc, 
-  increment 
+  serverTimestamp, 
+  runTransaction 
 } from "firebase/firestore";
 
-export const depositSaving = async (memberId: string, amount: number) => {
-  const today = new Date().getDate();
-  let penalty = 0;
+// Note: In our current flow, users use DepositForm to create a 'pending' transaction. 
+// This function is what the ADMIN will call to VERIFY that transaction.
+// It atomically updates the transaction status AND the user's total balance.
 
-  // Innovation: Auto-calculate penalty if it's after the 15th or 30th
-  // Adjust these ranges based on your group's specific grace period
-  if (today > 15 && today < 25) {
-    penalty = 500; // Example: 500 RWF late fee
-  }
-
+export const verifyAdminTransaction = async (transactionId: string, memberId: string, amount: number) => {
   try {
-    // 1. Record the Saving
-    await addDoc(collection(db, "transactions"), {
-      memberId,
-      amount,
-      type: "saving",
-      createdAt: serverTimestamp(),
-      isLate: penalty > 0
-    });
-
-    // 2. Record the Penalty (if applicable)
-    if (penalty > 0) {
-      await addDoc(collection(db, "transactions"), {
-        memberId,
-        amount: penalty,
-        type: "penalty",
-        createdAt: serverTimestamp(),
-      });
-    }
-
-    // 3. Update the Member's Balance (Subtracting penalty if any)
     const memberRef = doc(db, "members", memberId);
-    await updateDoc(memberRef, {
-      totalSavings: increment(amount - penalty)
+    const transactionRef = doc(db, "transactions", transactionId);
+    const logRef = doc(db, "audit_logs", transactionId); // Create an audit log with same ID
+
+    await runTransaction(db, async (transaction) => {
+      // 1. Read operations MUST come first
+      const memberDoc = await transaction.get(memberRef);
+      const txnDoc = await transaction.get(transactionRef);
+
+      if (!memberDoc.exists()) throw new Error("Member profile not found.");
+      if (!txnDoc.exists()) throw new Error("Transaction record not found.");
+      
+      // Prevent double verification
+      if (txnDoc.data().status === 'verified') {
+        throw new Error("This transaction has already been verified.");
+      }
+
+      // 2. Write operations
+      const currentSavings = memberDoc.data().totalSavings || 0;
+
+      // Update User Balance
+      transaction.update(memberRef, {
+        totalSavings: currentSavings + amount
+      });
+
+      // Update Transaction Status
+      transaction.update(transactionRef, {
+        status: 'verified',
+        verifiedAt: serverTimestamp()
+      });
+
+      // Create Immutable Audit Log
+      transaction.set(logRef, {
+        action: 'VERIFY_DEPOSIT',
+        transactionId: transactionId,
+        memberId: memberId,
+        amountAdded: amount,
+        timestamp: serverTimestamp()
+      });
     });
 
     return { success: true };
   } catch (error: any) {
+    console.error("Verification failed atomically: ", error);
     return { success: false, error: error.message };
   }
 };
