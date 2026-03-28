@@ -1,13 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ejo-hacu-app</title>
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <link rel="manifest" href="/manifest.json">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#4f46e5" /> 
+    
+    <title>Ejo Hacu | Secure Cooperative Management</title>
+    <meta name="description" content="Empowering communities through secure cooperative savings, transparent loan management, and financial growth in Rwanda." />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ejo Hacu - Grow Together" />
+    <meta property="og:description" content="Join our secure cooperative. Track your savings and apply for community-backed loans instantly." />
+    <meta property="og:image" content="/og-image.jpg" /> 
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+
+    <style>
+      /* Critical CSS: Prevent a blank white screen during initial load */
+      body {
+        margin: 0;
+        background-color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+      }
+      #root-loader {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="root-loader">
+        <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+    </div>
+
     <script type="module" src="/src/main.tsx"></script>
+    
+    <noscript>
+      <div style="padding: 20px; text-align: center; background: #fff1f2; color: #be123c; font-weight: bold;">
+        Ejo Hacu requires JavaScript to manage your finances safely. Please enable it in your browser settings.
+      </div>
+    </noscript>
   </body>
 </html>

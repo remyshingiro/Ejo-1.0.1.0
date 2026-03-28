@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { auth, db } from '../firebase/config'; // 🔥 Imported db
-import { doc, onSnapshot } from 'firebase/firestore'; // 🔥 Imported Firestore functions
+import { auth, db } from '../firebase/config';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { 
   LayoutDashboard, Wallet, HandCoins, Settings as SettingsIcon, 
-  LogOut, Menu, ShieldCheck, Shield // 🔥 Added Shield icon
+  LogOut, Menu, ShieldCheck, Shield, Download, X, Smartphone 
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -18,10 +18,14 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false); // 🔥 State to track admin status
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // 🔥 PWA Install Logic States
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
 
-  // 🔥 Real-time listener to check if the current user is an Admin
   useEffect(() => {
+    // 1. Admin Role Listener
     const user = auth.currentUser;
     if (!user) return;
 
@@ -33,8 +37,30 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
       }
     });
 
-    return () => unsub();
+    // 2. 🔥 Listen for the 'beforeinstallprompt' event
+    const handleInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    return () => {
+      unsub();
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+    };
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallBanner(false);
+    }
+  };
 
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -52,6 +78,7 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
         <div 
           className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden backdrop-blur-sm" 
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true" // 🔥 Accessibility fix: hides this decorative element from screen readers
         />
       )}
 
@@ -84,7 +111,7 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
             })}
           </div>
 
-          {/* 🔥 ADMIN QUICK ACCESS BUTTON */}
+          {/* ADMIN QUICK ACCESS BUTTON */}
           {isAdmin && (
             <div className="mt-6 pt-6 border-t border-slate-800/50">
               <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
@@ -123,6 +150,7 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
           <div className="flex items-center">
             <button 
               onClick={() => setSidebarOpen(true)} 
+              aria-label="Open sidebar menu" // 🔥 Accessibility fix
               className="lg:hidden p-2 -ml-2 mr-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <Menu size={20} />
@@ -142,7 +170,6 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
               </p>
             </div>
             
-            {/* USER IMAGE / INITIALS */}
             <div className="w-9 h-9 rounded-full bg-indigo-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-slate-200">
               {userImage ? (
                 <img 
@@ -159,8 +186,41 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
         </header>
 
         {/* PAGE CONTENT */}
-        <main className="p-4 lg:p-8 max-w-7xl w-full mx-auto flex-1">
+        <main className="p-4 lg:p-8 max-w-7xl w-full mx-auto flex-1 relative">
           {children}
+
+          {/* 🔥 INSTALL APP BANNER */}
+          {showInstallBanner && (
+            <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-8 md:w-96 z-100 animate-in fade-in slide-in-from-bottom-10 duration-500">
+              <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-700 p-5 flex items-center justify-between group">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
+                    <Smartphone className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-white tracking-tight">Ejo Hacu Mobile</h4>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Fast Access from Home</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={() => setShowInstallBanner(false)}
+                    aria-label="Close install prompt" // 🔥 Accessibility fix
+                    className="p-2 text-slate-500 hover:text-white transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleInstallClick}
+                    className="flex items-center px-4 py-2 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-50 transition-all active:scale-95 shadow-lg"
+                  >
+                    <Download className="w-3.5 h-3.5 mr-2" /> Install
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

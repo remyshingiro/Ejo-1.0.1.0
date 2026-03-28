@@ -53,7 +53,7 @@ const LoanRequest: React.FC<LoanRequestProps> = ({ memberId, savings }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden">
+    <div className="bg-white p-8 rounded-4xl shadow-sm border border-slate-100 relative overflow-hidden">
       {/* Visual Header */}
       <div className="flex items-center space-x-3 mb-6">
         <div className="p-2.5 bg-indigo-50 rounded-xl">
