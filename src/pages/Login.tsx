@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { auth } from '../firebase/config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Mail, Lock, Loader2, ShieldCheck, TrendingUp, Users } from 'lucide-react';
+import { Mail, Lock, Loader2, ShieldCheck, Users } from 'lucide-react'; // Removed TrendingUp
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -123,11 +123,11 @@ const Login = () => {
       <div className="hidden lg:flex w-1/2 relative bg-slate-900 overflow-hidden">
         {/* Adjusted the overlay to make sure the white text pops over the bright image */}
         <div className="absolute inset-0 bg-slate-900/50 z-10 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/60 to-transparent z-10" />
         
-        {/* Community Motivation Image */}
+        {/* NEW Community Motivation Image - Highly reliable Unsplash URL */}
         <img 
-          src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 
           alt="Community and Togetherness" 
           className="absolute inset-0 w-full h-full object-cover scale-105"
         />

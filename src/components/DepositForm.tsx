@@ -136,7 +136,7 @@ const DepositForm = ({ memberId }: Props) => {
       {/* Trust Footer */}
       <div className="bg-slate-50 p-4 border-t border-slate-200">
         <div className="flex items-start">
-          <ShieldCheck className="w-5 h-5 text-indigo-600 mt-0.5 mr-3 flex-shrink-0" />
+          <ShieldCheck className="w-5 h-5 text-indigo-600 mt-0.5 mr-3 shrink-0" />
           <p className="text-xs text-slate-500 leading-relaxed font-medium">
             All deposits must be verified by a group administrator. Please provide the exact name registered on the Mobile Money account used for this transfer.
           </p>

@@ -56,7 +56,7 @@ const Signup = () => {
       {/* LEFT COLUMN: The Inspirational Image (Hidden on Mobile) */}
       <div className="hidden lg:flex w-1/2 relative bg-slate-900 overflow-hidden">
         <div className="absolute inset-0 bg-emerald-900/30 z-10 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-slate-900/20 to-transparent z-10" />
         
         <img 
           src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" 

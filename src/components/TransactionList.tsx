@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTransactions } from '../hooks/useTransactions';
 import { ArrowDownLeft, ArrowUpRight, Clock, CheckCircle, XCircle } from 'lucide-react';
 
@@ -38,7 +37,7 @@ const TransactionList = ({ memberId }: { memberId: string }) => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[600px]">
+      <table className="w-full text-left border-collapse min-w-150">
         <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-y border-slate-200">
           <tr>
             <th className="px-6 py-3">Transaction Date</th>

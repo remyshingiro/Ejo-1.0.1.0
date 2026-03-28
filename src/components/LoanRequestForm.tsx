@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createLoanRequest } from '../firebase/loanService';
-import { Loader2, Banknote, HelpCircle } from 'lucide-react';
+import { Loader2, HelpCircle } from 'lucide-react';
 
 interface Props {
   memberId: string;
@@ -149,7 +149,7 @@ const LoanRequestForm = ({ memberId, savings }: Props) => {
       
       {/* Footer info */}
       <div className="bg-slate-50 p-4 border-t border-slate-200 flex items-start">
-        <HelpCircle className="w-5 h-5 text-slate-400 mt-0.5 mr-3 flex-shrink-0" />
+        <HelpCircle className="w-5 h-5 text-slate-400 mt-0.5 mr-3 shrink-0" />
         <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
           Loan approvals depend on your savings consistency and current cooperative liquidity. Repayment terms will be outlined upon approval.
         </p>

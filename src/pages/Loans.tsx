@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { auth, db } from '../firebase/config';
 import { doc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
@@ -100,7 +100,7 @@ const Loans = () => {
               </div>
               
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[600px]">
+                <table className="w-full text-left border-collapse min-w-150">
                   <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="px-6 py-3">Date</th>

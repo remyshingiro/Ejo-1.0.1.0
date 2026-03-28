@@ -138,7 +138,7 @@ const Settings = () => {
             
             {/* Avatar Section */}
             <div className="flex flex-col md:flex-row items-center gap-8 mb-8 pb-8 border-b border-slate-100">
-              <div className="relative group flex-shrink-0">
+              <div className="relative group shrink-0">
                 <div className={`w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-indigo-50 flex items-center justify-center relative transition-all ${uploadingImage ? 'opacity-50' : ''}`}>
                   {photoURL ? (
                     <img src={photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -278,7 +278,7 @@ const Settings = () => {
               <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-xl">
                 To protect your financial data, password modifications must be securely routed through your verified email provider.
               </p>
-              <button className="flex-shrink-0 border-2 border-slate-300 text-slate-700 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-400 transition-all">
+              <button className="shrink-0 border-2 border-slate-300 text-slate-700 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-400 transition-all">
                 Request Password Reset
               </button>
             </div>

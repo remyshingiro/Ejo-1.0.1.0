@@ -1,22 +1,38 @@
 import { db } from "./config";
 import { 
+  collection, 
+  addDoc, 
   doc, 
-  serverTimestamp, 
-  runTransaction 
+  updateDoc, 
+  runTransaction, 
+  serverTimestamp 
 } from "firebase/firestore";
 
-// Note: In our current flow, users use DepositForm to create a 'pending' transaction. 
-// This function is what the ADMIN will call to VERIFY that transaction.
-// It atomically updates the transaction status AND the user's total balance.
+// 1. MEMBER ACTION: Submit a new deposit for Admin review
+export const depositSaving = async (memberId: string, amount: number, momoSenderName: string = "") => {
+  try {
+    await addDoc(collection(db, "transactions"), {
+      memberId,
+      amount,
+      momoSenderName, // Saves the name they used on Mobile Money
+      type: "deposit",
+      status: "pending", // Always starts as pending for Admin review
+      createdAt: serverTimestamp()
+    });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
 
+// 2. ADMIN ACTION: Atomically verify deposit and update member's balance
 export const verifyAdminTransaction = async (transactionId: string, memberId: string, amount: number) => {
   try {
     const memberRef = doc(db, "members", memberId);
     const transactionRef = doc(db, "transactions", transactionId);
-    const logRef = doc(db, "audit_logs", transactionId); // Create an audit log with same ID
 
+    // 🔥 Zero-Bug Atomic Transaction
     await runTransaction(db, async (transaction) => {
-      // 1. Read operations MUST come first
       const memberDoc = await transaction.get(memberRef);
       const txnDoc = await transaction.get(transactionRef);
 
@@ -28,33 +44,41 @@ export const verifyAdminTransaction = async (transactionId: string, memberId: st
         throw new Error("This transaction has already been verified.");
       }
 
-      // 2. Write operations
       const currentSavings = memberDoc.data().totalSavings || 0;
 
-      // Update User Balance
+      // Add money to user's total savings
       transaction.update(memberRef, {
         totalSavings: currentSavings + amount
       });
 
-      // Update Transaction Status
+      // Mark the transaction as verified
       transaction.update(transactionRef, {
         status: 'verified',
         verifiedAt: serverTimestamp()
-      });
-
-      // Create Immutable Audit Log
-      transaction.set(logRef, {
-        action: 'VERIFY_DEPOSIT',
-        transactionId: transactionId,
-        memberId: memberId,
-        amountAdded: amount,
-        timestamp: serverTimestamp()
       });
     });
 
     return { success: true };
   } catch (error: any) {
     console.error("Verification failed atomically: ", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 3. ADMIN ACTION: Reject a fake or invalid deposit
+export const rejectAdminTransaction = async (transactionId: string) => {
+  try {
+    const transactionRef = doc(db, "transactions", transactionId);
+    
+    // We just update the status to rejected. The user's balance remains untouched.
+    await updateDoc(transactionRef, {
+      status: 'rejected',
+      rejectedAt: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Rejection failed: ", error);
     return { success: false, error: error.message };
   }
 };

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config'; // 🔥 Imported db
+import { doc, onSnapshot } from 'firebase/firestore'; // 🔥 Imported Firestore functions
 import { 
   LayoutDashboard, Wallet, HandCoins, Settings as SettingsIcon, 
-  LogOut, Menu, ShieldCheck 
+  LogOut, Menu, ShieldCheck, Shield // 🔥 Added Shield icon
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -17,6 +18,23 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false); // 🔥 State to track admin status
+
+  // 🔥 Real-time listener to check if the current user is an Admin
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const unsub = onSnapshot(doc(db, "members", user.uid), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().role === 'admin') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => unsub();
+  }, []);
 
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -45,24 +63,46 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
           </span>
         </div>
         
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
+        <nav className="flex-1 p-4 flex flex-col overflow-y-auto">
+          <div className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <button 
+                  key={item.name}
+                  onClick={() => { navigate(item.path); setSidebarOpen(false); }}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                    isActive 
+                      ? 'bg-indigo-600 text-white shadow-md' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  <span>{item.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 🔥 ADMIN QUICK ACCESS BUTTON */}
+          {isAdmin && (
+            <div className="mt-6 pt-6 border-t border-slate-800/50">
+              <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                Privileged Access
+              </p>
               <button 
-                key={item.name}
-                onClick={() => { navigate(item.path); setSidebarOpen(false); }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  isActive 
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                onClick={() => { navigate('/admin'); setSidebarOpen(false); }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  location.pathname === '/admin'
+                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-md'
+                    : 'text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 border border-transparent'
                 }`}
               >
-                <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                <span>{item.name}</span>
+                <Shield size={18} strokeWidth={2.5} />
+                <span>Admin Command</span>
               </button>
-            );
-          })}
+            </div>
+          )}
         </nav>
 
         <div className="p-4 border-t border-slate-800">
@@ -98,12 +138,12 @@ const Layout = ({ children, title, userName, userImage }: LayoutProps) => {
                 {userName || "Authenticated Member"}
               </p>
               <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider flex items-center justify-end">
-                <ShieldCheck className="w-3 h-3 mr-1" /> Verified Member
+                <ShieldCheck className="w-3 h-3 mr-1" /> {isAdmin ? "System Admin" : "Verified Member"}
               </p>
             </div>
             
             {/* USER IMAGE / INITIALS */}
-            <div className="w-9 h-9 rounded-full bg-indigo-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0 ring-1 ring-slate-200">
+            <div className="w-9 h-9 rounded-full bg-indigo-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden shrink-0 ring-1 ring-slate-200">
               {userImage ? (
                 <img 
                   src={userImage} 
