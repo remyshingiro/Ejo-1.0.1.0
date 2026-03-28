@@ -1,27 +1,46 @@
 import { db } from "./config";
-import { collection, addDoc, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
+import { 
+  collection, 
+  doc, 
+  writeBatch, // 🔥 Essential for financial safety
+  serverTimestamp, 
+  increment 
+} from "firebase/firestore";
 
 /**
- * Records a new saving and updates the member's total balance
+ * Records a new saving and updates the member's total balance atomically.
+ * This prevents data mismatch if one operation fails.
  */
 export const addSaving = async (memberId: string, amount: number) => {
+  if (amount <= 0) throw new Error("Amount must be greater than zero.");
+
+  // 1. Initialize a batch
+  const batch = writeBatch(db);
+
   try {
-    // 1. Add to Transactions history
-    await addDoc(collection(db, "transactions"), {
+    // 2. Prepare the Transaction Record
+    const txnRef = doc(collection(db, "transactions"));
+    batch.set(txnRef, {
       memberId,
       amount,
       type: "saving",
+      status: "verified", // If adding directly, otherwise "pending"
       createdAt: serverTimestamp(),
     });
 
-    // 2. Update the Member's total balance automatically
+    // 3. Prepare the Balance Update
     const memberRef = doc(db, "members", memberId);
-    await updateDoc(memberRef, {
-      totalBalance: increment(amount)
+    batch.update(memberRef, {
+      totalSavings: increment(amount), // Standardizing name to totalSavings
+      lastActivity: serverTimestamp()
     });
 
-    console.log("Saving recorded successfully!");
-  } catch (error) {
-    console.error("Error adding saving: ", error);
+    // 4. Commit both at the exact same millisecond
+    await batch.commit();
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Atomic saving failed:", error);
+    return { success: false, error: error.message };
   }
 };
